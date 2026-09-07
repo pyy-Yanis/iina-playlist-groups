@@ -32,4 +32,3 @@
 - [ ] Run the complete automated suite and syntax checks.
 - [ ] Deploy once to the installed plugin, restart IINA once, and verify all three reported scenarios plus loop regression.
 - [ ] Set version `0.1.5`, package the runtime files, test the archive, and compute SHA-256.
-

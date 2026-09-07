@@ -17,4 +17,3 @@ Unknown paths, invalid indexes, duplicate-path ambiguity, missing files, and sta
 ## Verification
 
 Automated regression tests cover all mode option mappings, direct index selection, and native-transition adoption. Real IINA verification uses two short videos for `once`, direct selection from item 2 to item 1, highlight movement from item 1 to item 2, and loop regression `1 → 2 → 1`.
-

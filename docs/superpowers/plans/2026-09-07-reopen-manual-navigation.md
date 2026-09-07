@@ -35,4 +35,3 @@
 - [ ] Run the full test and syntax suite.
 - [ ] Deploy once and perform one combined IINA acceptance run.
 - [ ] Package, integrity-test, and hash `0.1.6`.
-

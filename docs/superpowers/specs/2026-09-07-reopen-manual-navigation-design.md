@@ -15,4 +15,3 @@ The two row controls become previous/next playback actions within the current gr
 ## Verification
 
 Automated tests cover sidebar reload/rebinding, token-certified manual EOF, retained waiting state, and adjacent playback payloads. Real IINA verification covers initial-window reopening, manual `1 → Space → 2`, arrow navigation, and persistence of all existing group data.
-
