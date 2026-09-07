@@ -1,0 +1,19 @@
+{
+  "name": "Playback Groups",
+  "identifier": "com.iina.playback-groups",
+  "version": "0.1.10",
+  "author": {
+    "name": "IINA Playback Groups"
+  },
+  "description": "Manage independent playback groups in one IINA window.",
+  "entry": "main.js",
+  "global": "global.js",
+  "sidebarTab": {
+    "name": "播放分组"
+  },
+  "permissions": [
+    "file-system",
+    "show-alert",
+    "show-osd"
+  ]
+}
