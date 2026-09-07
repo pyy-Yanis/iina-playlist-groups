@@ -18,8 +18,6 @@ const { loadState, saveState, sanitizeState } = require('./storage.js');
 const DATA_PATH = '@data/playback-groups.json';
 const SIDEBAR_PATH = 'ui/sidebar.html';
 const LOAD_WATCHDOG_MS = 30000;
-const OWN_SIDEBAR = 'plugin:com.iina.playback-groups';
-const SIDEBAR_WATCH_INTERVAL_MS = 200;
 const SIDEBAR_MESSAGES = [
   'createGroup',
   'renameGroup',
@@ -89,13 +87,6 @@ function waitingAfterEofChange(_eofReached, waitingForNext) {
   return waitingForNext === true;
 }
 
-function shouldPreferPlaybackGroups(previousSidebar, currentSidebar, ownSidebar) {
-  return previousSidebar === null
-    && typeof currentSidebar === 'string'
-    && currentSidebar.startsWith('plugin:')
-    && currentSidebar !== ownSidebar;
-}
-
 function createController(iina, options) {
   const settings = options || {};
   const timers = settings.timers || {
@@ -127,8 +118,6 @@ function createController(iina, options) {
   let windowInactive = false;
   const failureTimers = new Set();
   let sampleInterval = null;
-  let sidebarPreferenceInterval = null;
-  let lastObservedSidebar;
   let readOnly = settings.readOnly === true;
   let readOnlyReason = '';
   let closed = false;
@@ -1157,7 +1146,6 @@ function createController(iina, options) {
       flushSave();
     }
     controllerPause();
-    clearSidebarPreferenceWatcher();
     clearOwnedTimers();
     setWaitingForNext(false);
     restoreOwnedMpvOptions();
@@ -1183,49 +1171,9 @@ function createController(iina, options) {
     // A PlayerCore may start on IINA's initial window, where the first sidebar
     // load is forbidden. Create it only after IINA certifies the player window.
     loadSidebarDocument();
-    startSidebarPreferenceWatcher();
     activateOwner();
     postState();
     postPlayback();
-  }
-
-  function currentWindowSidebar() {
-    try {
-      const value = iina.core && iina.core.window ? iina.core.window.sidebar : undefined;
-      return typeof value === 'string' || value === null ? value : undefined;
-    } catch (_) {
-      return undefined;
-    }
-  }
-
-  function checkSidebarPreference() {
-    const currentSidebar = currentWindowSidebar();
-    if (currentSidebar === undefined) return;
-    const shouldRedirect = shouldPreferPlaybackGroups(
-      lastObservedSidebar, currentSidebar, OWN_SIDEBAR,
-    );
-    lastObservedSidebar = currentSidebar;
-    if (!shouldRedirect) return;
-    try {
-      iina.sidebar.show();
-      lastObservedSidebar = OWN_SIDEBAR;
-    } catch (_) {
-      // A failed switch is consumed for this opening. Closing rearms the watcher.
-    }
-  }
-
-  function startSidebarPreferenceWatcher() {
-    if (sidebarPreferenceInterval !== null || currentWindowSidebar() === undefined) return;
-    lastObservedSidebar = currentWindowSidebar();
-    sidebarPreferenceInterval = timers.setInterval(
-      checkSidebarPreference, SIDEBAR_WATCH_INTERVAL_MS,
-    );
-  }
-
-  function clearSidebarPreferenceWatcher() {
-    if (sidebarPreferenceInterval !== null) timers.clearInterval(sidebarPreferenceInterval);
-    sidebarPreferenceInterval = null;
-    lastObservedSidebar = undefined;
   }
 
   function finishOnLastFrame(message) {
@@ -1559,7 +1507,6 @@ function createController(iina, options) {
     if (closed) return;
     onWindowWillClose();
     closed = true;
-    clearSidebarPreferenceWatcher();
     clearOwnedTimers();
     setWaitingForNext(false);
     if (spaceMenuItemIndex !== null) {
@@ -1574,8 +1521,6 @@ function createController(iina, options) {
 module.exports = {
   DATA_PATH,
   LOAD_WATCHDOG_MS,
-  OWN_SIDEBAR,
-  SIDEBAR_WATCH_INTERVAL_MS,
   SIDEBAR_MESSAGES,
   createController,
   commandNextItemIndex,
@@ -1584,7 +1529,6 @@ module.exports = {
   playNativePlaylistIndex,
   replaceNativePlaylist,
   synchronizedCurrentIndex,
-  shouldPreferPlaybackGroups,
   transitionAutoplay,
   waitingAfterEofChange,
 };
