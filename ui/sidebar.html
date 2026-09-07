@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>播放分组</title>
+  <link rel="stylesheet" href="sidebar.css">
+</head>
+<body>
+  <header class="tab-bar" aria-label="播放分组">
+    <div id="group-tab-list" role="tablist" aria-label="分组列表"></div>
+    <button id="create-group-button" class="icon-button add-group" type="button" aria-label="新建分组" title="新建分组">＋</button>
+  </header>
+
+  <main id="sidebar-main">
+    <p id="read-only-notice" class="read-only-notice" role="status" hidden></p>
+    <section id="empty-state" class="empty-state" aria-live="polite">
+      <span class="empty-icon" aria-hidden="true">▶︎</span>
+      <h1>还没有播放分组</h1>
+      <p>新建一个分组，开始整理播放列表。</p>
+      <button id="empty-create-button" type="button">新建分组</button>
+    </section>
+
+    <section id="group-panel" class="group-panel" role="tabpanel" hidden aria-labelledby="group-title">
+      <div class="group-heading">
+        <div class="group-title-wrap">
+          <h1 id="group-title"></h1>
+          <span id="group-summary" class="group-summary"></span>
+        </div>
+        <button id="group-menu-button" class="icon-button" type="button" aria-label="分组设置" aria-haspopup="menu" aria-expanded="false">•••</button>
+      </div>
+
+      <div id="group-menu" class="group-menu" role="menu" aria-label="分组设置" hidden>
+        <div class="menu-label">播放模式</div>
+        <button type="button" role="menuitemradio" data-mode="loop" aria-checked="false"><span>循环播放</span><span class="checkmark" aria-hidden="true">✓</span></button>
+        <button type="button" role="menuitemradio" data-mode="once" aria-checked="false"><span>播放一次</span><span class="checkmark" aria-hidden="true">✓</span></button>
+        <button type="button" role="menuitemradio" data-mode="manual" aria-checked="false"><span>手动逐项</span><span class="checkmark" aria-hidden="true">✓</span></button>
+        <div class="menu-separator" role="separator"></div>
+        <button id="resume-menu-item" type="button" role="menuitemcheckbox" aria-checked="false"><span>记忆播放位置</span><span class="checkmark" aria-hidden="true">✓</span></button>
+        <div class="menu-separator" role="separator"></div>
+        <button id="rename-group-button" type="button" role="menuitem">重命名…</button>
+        <button id="delete-group-button" class="danger" type="button" role="menuitem">删除分组…</button>
+      </div>
+
+      <ol id="item-list" aria-label="当前分组的项目"></ol>
+
+      <div id="group-empty-state" class="group-empty-state" hidden>
+        <p>将媒体文件添加到这个分组。</p>
+      </div>
+
+      <footer class="group-actions">
+        <button id="add-files-button" type="button">＋ 添加文件</button>
+      </footer>
+    </section>
+  </main>
+
+  <dialog id="group-name-dialog" aria-labelledby="dialog-title" aria-describedby="dialog-error">
+    <form method="dialog" novalidate>
+      <h2 id="dialog-title">新建分组</h2>
+      <label for="group-name-input">名称</label>
+      <input id="group-name-input" name="groupName" value="新分组" maxlength="80" autocomplete="off" required>
+      <p id="dialog-error" class="dialog-error" aria-live="polite"></p>
+      <div class="dialog-actions">
+        <button type="button" data-dialog-action="cancel">取消</button>
+        <button class="primary" type="submit" data-dialog-action="confirm">确认</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="delete-group-dialog" aria-labelledby="delete-dialog-title" aria-describedby="delete-dialog-message">
+    <form method="dialog">
+      <h2 id="delete-dialog-title">删除分组</h2>
+      <p id="delete-dialog-message" class="dialog-message"></p>
+      <div class="dialog-actions">
+        <button type="button" data-delete-action="cancel">取消</button>
+        <button class="danger" type="submit" data-delete-action="confirm">删除</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="error-toast" class="error-toast" role="status" aria-live="polite" hidden></div>
+  <output id="fixture-message-log" class="fixture-message-log" aria-live="polite" hidden></output>
+  <script src="sidebar.js"></script>
+</body>
+</html>
