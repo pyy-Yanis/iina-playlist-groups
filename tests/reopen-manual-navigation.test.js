@@ -8,6 +8,7 @@ const {
   createController,
   manualEndItemIndex,
   commandNextItemIndex,
+  shouldPreferPlaybackGroups,
   waitingAfterEofChange,
 } = require('../src/controller.js');
 const { adjacentPlaybackPayload } = require('../ui/sidebar.js');
@@ -67,6 +68,24 @@ test('controller defers sidebar loading until IINA reports the player window is 
 
   assert.equal(loads, 1);
   assert.equal(bindings, 11);
+});
+
+test('closed plugin sidebar openings prefer Playback Groups exactly once', () => {
+  const ownSidebar = 'plugin:com.iina.playback-groups';
+  assert.equal(shouldPreferPlaybackGroups(undefined, null, ownSidebar), false);
+  assert.equal(shouldPreferPlaybackGroups(null, 'plugin:opensubtitles', ownSidebar), true);
+  assert.equal(shouldPreferPlaybackGroups(null, ownSidebar, ownSidebar), false);
+  assert.equal(shouldPreferPlaybackGroups(ownSidebar, 'plugin:opensubtitles', ownSidebar), false);
+  assert.equal(shouldPreferPlaybackGroups('plugin:opensubtitles', null, ownSidebar), false);
+  assert.equal(shouldPreferPlaybackGroups(null, 'playlist', ownSidebar), false);
+});
+
+test('sidebar preference watcher starts after window load and is cleared on close', () => {
+  const source = fs.readFileSync(path.join(__dirname, '../src/controller.js'), 'utf8');
+  assert.match(source, /function startSidebarPreferenceWatcher\(\)/);
+  assert.match(source, /function onWindowLoaded\(\)[\s\S]*startSidebarPreferenceWatcher\(\)/);
+  assert.match(source, /function onWindowWillClose\(\)[\s\S]*clearSidebarPreferenceWatcher\(\)/);
+  assert.match(source, /function dispose\(\)[\s\S]*clearSidebarPreferenceWatcher\(\)/);
 });
 
 test('manual EOF identifies the completed item from its verified loaded token', () => {
