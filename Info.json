@@ -1,13 +1,15 @@
 {
   "name": "Playback Groups",
   "identifier": "com.iina.playback-groups",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "author": {
     "name": "IINA Playback Groups"
   },
   "description": "Manage independent playback groups in one IINA window.",
   "entry": "main.js",
   "global": "global.js",
+  "ghRepo": "pyy-Yanis/iina-playlist-groups",
+  "ghVersion": 11,
   "sidebarTab": {
     "name": "播放分组"
   },

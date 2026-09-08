@@ -7,6 +7,7 @@
 ## 主要功能
 
 - 在 IINA 侧边栏中横向显示多个播放分组。
+- 按 `Control + P`，或点击“插件 → Playback Groups → 显示播放分组”，直接打开播放分组。
 - 每组独立选择“循环播放”“播放一次”或“手动逐项”。
 - 每组独立决定是否记忆播放进度；同一个视频在不同分组中遵循各自规则。
 - 分组、文件顺序、播放模式和进度设置在重启 IINA 后仍会保留。
@@ -22,7 +23,7 @@
 ## 安装
 
 1. 打开项目的 [Releases](../../releases/latest) 页面。
-2. 下载 `IINA-Playback-Groups-0.1.10.iinaplgz`。
+2. 下载 `IINA-Playback-Groups-0.1.11.iinaplgz`。
 3. 双击安装包，或在 IINA 的插件设置中选择安装本地插件。
 4. 如插件没有立即出现，请完全退出并重新打开 IINA。
 
@@ -57,6 +58,7 @@
 | --- | --- |
 | `Space` | IINA 原生播放/暂停 |
 | `Shift + Space` | 在“手动逐项”分组中播放下一项 |
+| `Control + P` | 直接打开并切换到“播放分组” |
 
 ## 开发与测试
 
@@ -75,7 +77,7 @@ for file in global.js main.js src/*.js ui/sidebar.js; do node --check "$file" ||
 打包插件：
 
 ```bash
-zip -X -q -r IINA-Playback-Groups-0.1.10.iinaplgz Info.json global.js main.js src ui
+zip -X -q -r IINA-Playback-Groups-0.1.11.iinaplgz Info.json global.js main.js src ui
 ```
 
 ## 说明

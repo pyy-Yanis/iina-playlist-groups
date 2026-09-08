@@ -7,6 +7,7 @@ Add clear, horizontally arranged playlist groups to [IINA](https://iina.io/). Ea
 ## Features
 
 - Display multiple playlist groups horizontally in the IINA sidebar.
+- Press `Control + P`, or choose **Plugins → Playback Groups → Show Playback Groups**, to open the groups directly.
 - Choose Loop, Play Once, or Manual Step independently for each group.
 - Enable or disable progress memory per group; the same video follows the rules of the group that contains it.
 - Preserve groups, item order, playback modes, and progress settings across IINA restarts.
@@ -22,7 +23,7 @@ Add clear, horizontally arranged playlist groups to [IINA](https://iina.io/). Ea
 ## Installation
 
 1. Open the project's [Releases](../../releases/latest) page.
-2. Download `IINA-Playback-Groups-0.1.10.iinaplgz`.
+2. Download `IINA-Playback-Groups-0.1.11.iinaplgz`.
 3. Double-click the package, or install it as a local plugin from IINA's plugin settings.
 4. If the plugin does not appear immediately, quit IINA completely and reopen it.
 
@@ -57,6 +58,7 @@ Progress is stored per group and per video item, so the same file can have diffe
 | --- | --- |
 | `Space` | IINA's native play/pause action |
 | `Shift + Space` | Play the next item in a Manual Step group |
+| `Control + P` | Open and switch directly to Playback Groups |
 
 ## Development and testing
 
@@ -75,7 +77,7 @@ for file in global.js main.js src/*.js ui/sidebar.js; do node --check "$file" ||
 Package the plugin:
 
 ```bash
-zip -X -q -r IINA-Playback-Groups-0.1.10.iinaplgz Info.json global.js main.js src ui
+zip -X -q -r IINA-Playback-Groups-0.1.11.iinaplgz Info.json global.js main.js src ui
 ```
 
 ## Notes
