@@ -734,6 +734,30 @@
     elements.list.addEventListener('dragover', onListDragOver);
     elements.list.addEventListener('dragleave', () => elements.list.classList.remove('is-drop-end'));
     elements.list.addEventListener('drop', onListDrop);
+    // Capture external files before the existing internal row-reordering handlers.
+    const importArea = document.getElementById('sidebar-main');
+    function externalFiles(event) {
+      return !draggedItem && event.dataTransfer
+        && Array.from(event.dataTransfer.types).includes('Files');
+    }
+    importArea.addEventListener('dragover', (event) => {
+      if (!externalFiles(event)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      event.dataTransfer.dropEffect = readOnly ? 'none' : 'copy';
+      if (!readOnly) elements.list.classList.add('is-drop-end');
+    }, true);
+    importArea.addEventListener('drop', (event) => {
+      if (!externalFiles(event)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      clearDropStyles();
+      const group = selectedGroup();
+      const droppedFiles = Array.from(event.dataTransfer.files).map((file) => ({ name: file.name }));
+      if (!readOnly && group && droppedFiles.length) {
+        send('addFiles', { groupId: group.id, droppedFiles });
+      }
+    }, true);
     elements.menu.addEventListener('keydown', onMenuKeydown);
     document.addEventListener('click', (event) => {
       if (!elements.menu.hidden && !elements.menu.contains(event.target) && !elements.menuButton.contains(event.target)) closeMenu();

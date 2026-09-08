@@ -14,6 +14,7 @@ const {
   resolveStartPosition,
 } = require('./playback.js');
 const { loadState, saveState, sanitizeState } = require('./storage.js');
+const { selectImportPaths } = require('./file-import.js');
 
 const DATA_PATH = '@data/playback-groups.json';
 const SIDEBAR_PATH = 'ui/sidebar.html';
@@ -674,28 +675,45 @@ function createController(iina, options) {
     return false;
   }
 
+  let importingFiles = false;
   async function onAddFiles(payload) {
-    if (!payload || !state.groups.some((group) => group.id === payload.groupId)) return;
+    if (!canWrite() || importingFiles || !payload
+      || !state.groups.some((group) => group.id === payload.groupId)) return;
     const operationEpoch = { authority: authorityEpoch, window: windowEpoch };
-    let selected;
+    importingFiles = true;
+    let paths;
     try {
-      selected = await Promise.resolve(iina.utils.chooseFile('添加媒体文件', {}));
-    } catch (_) {
+      paths = await selectImportPaths(iina, payload.droppedFiles);
+    } catch (error) {
+      notifyProblem(error.message || '文件导入失败');
       return;
+    } finally {
+      importingFiles = false;
     }
     if (!canWrite() || operationEpoch.authority !== authorityEpoch
       || operationEpoch.window !== windowEpoch
       || !state.groups.some((group) => group.id === payload.groupId)) return;
-    const candidates = Array.isArray(selected) ? selected : [selected];
-    const paths = candidates.filter((path) => (
-      typeof path === 'string' && path.trim().length > 0
-    ));
     if (paths.length === 0) return;
     let nextState = addItems(state, payload.groupId, paths);
     if (nextState === state) return;
     if (payload.groupId === selectedGroupId) sampleProgress();
     nextState = addItems(state, payload.groupId, paths);
-    applyMutation(nextState, payload.groupId === selectedGroupId);
+    const group = selectedGroup();
+    const entries = nativePlaylistEntries();
+    const canAppend = payload.groupId === selectedGroupId && group && group.items.length > 0
+      && !synchronizing && entries.length === group.items.length
+      && entries.every((entry, index) => normalizedMediaPath(entry.filename)
+        === normalizedMediaPath(group.items[index].path));
+    if (payload.groupId === selectedGroupId && group && group.items.length && !canAppend) {
+      notifyProblem('播放器正在切换文件，请稍后重新添加；原列表未改变');
+      return;
+    }
+    applyMutation(nextState, false);
+    if (canAppend) {
+      paths.forEach((path) => iina.mpv.command('loadfile', [path, 'append']));
+    } else if (payload.groupId === selectedGroupId) {
+      pauseAndSynchronize();
+    }
   }
 
   function onRemoveItem(payload) {

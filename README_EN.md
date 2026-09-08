@@ -23,7 +23,7 @@ Add clear, horizontally arranged playlist groups to [IINA](https://iina.io/). Ea
 ## Installation
 
 1. Open the project's [Releases](../../releases/latest) page.
-2. Download `IINA-Playback-Groups-0.1.11.iinaplgz`.
+2. Download `IINA-Playback-Groups-0.1.12.iinaplgz`.
 3. Double-click the package, or install it as a local plugin from IINA's plugin settings.
 4. If the plugin does not appear immediately, quit IINA completely and reopen it.
 
@@ -31,7 +31,7 @@ Add clear, horizontally arranged playlist groups to [IINA](https://iina.io/). Ea
 
 1. Open a video in IINA and expand the **Playback Groups** tab in the right sidebar.
 2. Click the top `+` to create a group. The dialog starts with “新分组” (New Group); confirm it directly or edit the name first.
-3. Select a group and click the bottom `+` to add videos to it.
+3. Select a group and click **Add Files**. Use `Command` or `Shift` to select multiple videos, or drag multiple files from Finder into the group's list. Imported files are appended at the end.
 4. Open the group menu to choose its playback mode and progress-memory setting.
 5. Double-click a video to play it, or use the previous/next controls in its row.
 
@@ -77,10 +77,12 @@ for file in global.js main.js src/*.js ui/sidebar.js; do node --check "$file" ||
 Package the plugin:
 
 ```bash
-zip -X -q -r IINA-Playback-Groups-0.1.11.iinaplgz Info.json global.js main.js src ui
+zip -X -q -r IINA-Playback-Groups-0.1.12.iinaplgz Info.json global.js main.js src ui
 ```
 
 ## Notes
+
+Batch import uses macOS's built-in file chooser and dragging pasteboard. Media files are neither copied nor uploaded. Drop files into the Playback Groups list; folders are not supported. Drops onto the video remain handled by IINA. Internal reordering and transfers between groups keep their existing behavior.
 
 Groups are managed by this plugin and are separate from IINA's single native playlist-loop setting. Deleting a group removes only the plugin's group record; it never deletes video files from disk.
 

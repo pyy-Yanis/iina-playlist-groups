@@ -23,7 +23,7 @@
 ## 安装
 
 1. 打开项目的 [Releases](../../releases/latest) 页面。
-2. 下载 `IINA-Playback-Groups-0.1.11.iinaplgz`。
+2. 下载 `IINA-Playback-Groups-0.1.12.iinaplgz`。
 3. 双击安装包，或在 IINA 的插件设置中选择安装本地插件。
 4. 如插件没有立即出现，请完全退出并重新打开 IINA。
 
@@ -31,7 +31,7 @@
 
 1. 在 IINA 中打开一个视频，并展开右侧边栏的“播放分组”。
 2. 点击顶部 `+` 创建分组。输入框默认显示“新分组”，可直接确认或修改名称后确认。
-3. 选中分组后，点击底部 `+` 向当前分组添加视频。
+3. 选中分组后，点击底部“添加文件”，按住 `Command` 多选或 `Shift` 连选视频，一次加入当前分组；也可在 Finder 中多选文件，拖到当前分组列表中。文件追加在末尾。
 4. 点击分组菜单，为当前分组设置播放模式和是否记忆进度。
 5. 双击视频开始播放；也可以使用行内上一项/下一项按钮切换。
 
@@ -77,10 +77,12 @@ for file in global.js main.js src/*.js ui/sidebar.js; do node --check "$file" ||
 打包插件：
 
 ```bash
-zip -X -q -r IINA-Playback-Groups-0.1.11.iinaplgz Info.json global.js main.js src ui
+zip -X -q -r IINA-Playback-Groups-0.1.12.iinaplgz Info.json global.js main.js src ui
 ```
 
 ## 说明
+
+批量导入使用 macOS 自带的文件选择窗口和拖拽路径读取功能，不复制媒体文件，也不会上传到网络。拖拽只支持文件，不支持文件夹；请把文件拖入“播放分组”列表区域，拖到视频画面仍由 IINA 原生行为处理。原有列表内拖动排序以及跨组拖动不受影响。
 
 播放分组由插件管理，与 IINA 原生播放列表的单一循环设置不同。删除分组只会删除插件中的分组记录，不会删除磁盘上的视频文件。
 
