@@ -100,6 +100,7 @@ function createController(iina, options) {
   let currentItemId = null;
   let waitingForNext = false;
   let spaceMenuItemIndex = null;
+  let openSidebarMenuItemIndex = null;
   let playbackPosition = 0;
   let playbackDuration = 0;
   let loadGeneration = 0;
@@ -776,6 +777,7 @@ function createController(iina, options) {
       iina.event.on('mpv.pause.changed', onPauseChanged);
       iina.event.on('mpv.end-file', onEndFile);
       iina.input.onKeyDown('Shift+SPACE', onSpaceKey, iina.input.PRIORITY_HIGH);
+      iina.input.onKeyDown('Ctrl+p', showPlaybackGroups, iina.input.PRIORITY_HIGH);
       iina.mpv.addHook('on_load_fail', 50, onLoadFail);
     }
     synchronizePlaylist();
@@ -1392,7 +1394,20 @@ function createController(iina, options) {
     return false;
   }
 
+  function showPlaybackGroups(data) {
+    if (data && data.isRepeat === true) return true;
+    iina.sidebar.show();
+    return true;
+  }
+
   function ensureNextMenuItem() {
+    if (openSidebarMenuItemIndex === null) {
+      openSidebarMenuItemIndex = iina.menu.items().length;
+      iina.menu.addItem(iina.menu.item(
+        '显示播放分组',
+        showPlaybackGroups,
+      ));
+    }
     if (spaceMenuItemIndex === null) {
       spaceMenuItemIndex = iina.menu.items().length;
       iina.menu.addItem(iina.menu.item(
@@ -1512,6 +1527,10 @@ function createController(iina, options) {
     if (spaceMenuItemIndex !== null) {
       iina.menu.removeAt(spaceMenuItemIndex);
       spaceMenuItemIndex = null;
+    }
+    if (openSidebarMenuItemIndex !== null) {
+      iina.menu.removeAt(openSidebarMenuItemIndex);
+      openSidebarMenuItemIndex = null;
     }
   }
 
