@@ -146,7 +146,7 @@ test('manual next uses Shift+Space without conflicting with native Space', () =>
 test('Playback Groups opens directly with conflict-free Control+P and a menu action', () => {
   const source = fs.readFileSync(path.join(__dirname, '../src/controller.js'), 'utf8');
   assert.match(source, /function showPlaybackGroups\(data\)[\s\S]*iina\.sidebar\.show\(\)/);
-  assert.match(source, /iina\.input\.onKeyDown\('Ctrl\+P',\s*showPlaybackGroups,\s*iina\.input\.PRIORITY_HIGH\)/);
+  assert.match(source, /iina\.input\.onKeyDown\('Ctrl\+p',\s*showPlaybackGroups,\s*iina\.input\.PRIORITY_HIGH\)/);
   assert.match(source, /iina\.menu\.item\(\s*'显示播放分组',\s*showPlaybackGroups/);
   assert.doesNotMatch(source, /onKeyDown\('Shift\+P'/);
   assert.match(source, /function dispose\(\)[\s\S]*openSidebarMenuItemIndex[\s\S]*iina\.menu\.removeAt/);

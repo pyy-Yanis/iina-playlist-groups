@@ -14,4 +14,4 @@ Provide one reliable action that opens IINA's plugin sidebar directly on Playbac
 
 ## Implementation and Verification
 
-Register `Ctrl+P` through `iina.input.onKeyDown` at high priority, matching the proven `Shift+Space` path, and add a static clickable plugin menu item without a menu key binding. Remove the menu item during disposal. Add source-level regression coverage, run the full suite and syntax checks once, deploy once, and verify both the shortcut and menu action in IINA before packaging version `0.1.11`.
+Register the user-facing `Control+P` shortcut as mpv key code `Ctrl+p` through `iina.input.onKeyDown` at high priority, matching the proven `Shift+Space` path, and add a static clickable plugin menu item without a menu key binding. The lowercase internal key code is required because uppercase `P` means `Shift+P` to mpv. Remove the menu item during disposal. Add source-level regression coverage, run the full suite and syntax checks once, deploy once, and verify both the shortcut and menu action in IINA before packaging version `0.1.11`.

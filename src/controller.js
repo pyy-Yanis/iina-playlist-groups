@@ -777,7 +777,7 @@ function createController(iina, options) {
       iina.event.on('mpv.pause.changed', onPauseChanged);
       iina.event.on('mpv.end-file', onEndFile);
       iina.input.onKeyDown('Shift+SPACE', onSpaceKey, iina.input.PRIORITY_HIGH);
-      iina.input.onKeyDown('Ctrl+P', showPlaybackGroups, iina.input.PRIORITY_HIGH);
+      iina.input.onKeyDown('Ctrl+p', showPlaybackGroups, iina.input.PRIORITY_HIGH);
       iina.mpv.addHook('on_load_fail', 50, onLoadFail);
     }
     synchronizePlaylist();
