@@ -228,6 +228,7 @@ button:focus-visible, input:focus-visible, [draggable="true"]:focus-visible {
 .item-copy { min-width: 0; }
 .item-name { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .item-meta { display: block; margin-top: 2px; color: var(--secondary); font-size: 10px; }
+.item-meta:empty { display: none; }
 .item-duration { color: var(--secondary); font-variant-numeric: tabular-nums; font-size: 11px; }
 .remove-item { width: 28px; height: 28px; opacity: 0; color: var(--secondary); }
 .item-row:hover .remove-item, .remove-item:focus-visible { opacity: 1; }

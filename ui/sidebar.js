@@ -153,6 +153,12 @@
     return parts[parts.length - 1] || '未命名项目';
   }
 
+  function itemMetaText(item) {
+    if (item.missing === true) return '文件缺失';
+    if (item.damaged === true) return '无法播放，可点击重试';
+    return '';
+  }
+
   function formatDuration(seconds) {
     if (!Number.isFinite(seconds) || seconds < 0) return '';
     const rounded = Math.floor(seconds);
@@ -450,7 +456,7 @@
         const name = row.querySelector('.item-name');
         name.textContent = basename(item.path);
         const meta = row.querySelector('.item-meta');
-        meta.textContent = missing ? '文件缺失' : damaged ? '无法播放，可点击重试' : item.path;
+        meta.textContent = itemMetaText(item);
         patchDurationText(row, item, playback);
         const previousItem = row.querySelector('.play-previous-item');
         const nextItem = row.querySelector('.play-next-item');
@@ -797,6 +803,7 @@
     confirmAfterClosingMenu,
     closeMenuForRender,
     itemAriaLabel,
+    itemMetaText,
     patchDurationText,
     patchPlaybackRow,
     makeTransferPayload,
