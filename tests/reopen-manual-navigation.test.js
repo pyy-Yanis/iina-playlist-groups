@@ -162,6 +162,12 @@ test('Shift+Space resolves the next manual item without depending on EOF state',
   assert.equal(commandNextItemIndex({ ...group, mode: 'loop' }, 'item-1'), -1);
 });
 
+test('plugin OSD messages are suppressed while the player is fullscreen', () => {
+  const source = fs.readFileSync(path.join(__dirname, '../src/controller.js'), 'utf8');
+  assert.match(source, /function showMessage\(message\)[\s\S]*iina\.core\.window\.fullscreen[\s\S]*iina\.core\.osd\(message\)/);
+  assert.equal((source.match(/iina\.core\.osd\(/g) || []).length, 1);
+});
+
 test('progress sampling recovers a missed manual EOF property callback', () => {
   const source = fs.readFileSync(path.join(__dirname, '../src/controller.js'), 'utf8');
   assert.match(source, /function sampleProgress\(\)[\s\S]*group\.mode === 'manual'[\s\S]*getFlag\('eof-reached'\)[\s\S]*handleNaturalEndEvent\(\)/);

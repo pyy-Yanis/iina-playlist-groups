@@ -613,8 +613,13 @@ function createController(iina, options) {
     return true;
   }
 
-  function notifyProblem(message) {
+  function showMessage(message) {
+    if (iina.core.window.fullscreen === true) return;
     iina.core.osd(message);
+  }
+
+  function notifyProblem(message) {
+    showMessage(message);
     iina.sidebar.postMessage('error', { message });
   }
 
@@ -1199,7 +1204,7 @@ function createController(iina, options) {
   function finishOnLastFrame(message) {
     setWaitingForNext(false);
     controllerPause();
-    if (message) iina.core.osd(message);
+    if (message) showMessage(message);
     postPlayback();
   }
 
@@ -1358,7 +1363,7 @@ function createController(iina, options) {
     if (decision.action === 'wait') {
       setWaitingForNext(true);
       controllerPause();
-      iina.core.osd('按空格播放下一项');
+      showMessage('按 Shift+Space 播放下一项');
       postPlayback();
       return;
     }
