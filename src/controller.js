@@ -713,9 +713,11 @@ function createController(iina, options) {
       notifyProblem('播放器正在切换文件，请稍后重新添加；原列表未改变');
       return;
     }
+    const addedPaths = nextState.groups.find((candidate) => candidate.id === payload.groupId)
+      .items.slice(group ? group.items.length : 0).map((item) => item.path);
     applyMutation(nextState, false);
     if (canAppend) {
-      paths.forEach((path) => iina.mpv.command('loadfile', [path, 'append']));
+      addedPaths.forEach((path) => iina.mpv.command('loadfile', [path, 'append']));
     } else if (payload.groupId === selectedGroupId) {
       pauseAndSynchronize();
     }

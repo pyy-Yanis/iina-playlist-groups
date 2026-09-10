@@ -59,9 +59,15 @@ function addItems(state, groupId, paths) {
   if (!group || !Array.isArray(paths) || paths.length === 0) {
     return state;
   }
-  if (!canAllocate(state.nextItemId, paths.length)) return state;
+  const knownPaths = new Set(group.items.map((item) => item.path));
+  const uniquePaths = paths.filter((path) => {
+    if (knownPaths.has(path)) return false;
+    knownPaths.add(path);
+    return true;
+  });
+  if (uniquePaths.length === 0 || !canAllocate(state.nextItemId, uniquePaths.length)) return state;
 
-  const items = paths.map((path, index) => ({
+  const items = uniquePaths.map((path, index) => ({
     id: `item-${state.nextItemId + index}`,
     path,
   }));
