@@ -59,6 +59,12 @@ function transitionAutoplay(mode, wasPaused) {
   return mode !== 'manual' || wasPaused !== true;
 }
 
+function importSyncStrategy(selected, groupLength, synchronizing, playlistMatches) {
+  if (!selected) return 'none';
+  return groupLength > 0 && !synchronizing && playlistMatches
+    ? 'append' : 'resynchronize';
+}
+
 function commandNextItemIndex(group, currentItemId) {
   if (!group || group.mode !== 'manual') return -1;
   const currentIndex = group.items.findIndex((item) => item.id === currentItemId);
@@ -705,20 +711,21 @@ function createController(iina, options) {
     nextState = addItems(state, payload.groupId, paths);
     const group = selectedGroup();
     const entries = nativePlaylistEntries();
-    const canAppend = payload.groupId === selectedGroupId && group && group.items.length > 0
-      && !synchronizing && entries.length === group.items.length
+    const playlistMatches = Boolean(group) && entries.length === group.items.length
       && entries.every((entry, index) => normalizedMediaPath(entry.filename)
         === normalizedMediaPath(group.items[index].path));
-    if (payload.groupId === selectedGroupId && group && group.items.length && !canAppend) {
-      notifyProblem('播放器正在切换文件，请稍后重新添加；原列表未改变');
-      return;
-    }
+    const syncStrategy = importSyncStrategy(
+      payload.groupId === selectedGroupId,
+      group ? group.items.length : 0,
+      synchronizing,
+      playlistMatches,
+    );
     const addedPaths = nextState.groups.find((candidate) => candidate.id === payload.groupId)
       .items.slice(group ? group.items.length : 0).map((item) => item.path);
     applyMutation(nextState, false);
-    if (canAppend) {
+    if (syncStrategy === 'append') {
       addedPaths.forEach((path) => iina.mpv.command('loadfile', [path, 'append']));
-    } else if (payload.groupId === selectedGroupId) {
+    } else if (syncStrategy === 'resynchronize') {
       pauseAndSynchronize();
     }
   }
@@ -1568,6 +1575,7 @@ module.exports = {
   SIDEBAR_MESSAGES,
   createController,
   commandNextItemIndex,
+  importSyncStrategy,
   manualEndItemIndex,
   mpvOptionsForMode,
   playNativePlaylistIndex,
