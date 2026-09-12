@@ -19,6 +19,8 @@ const { selectImportPaths } = require('./file-import.js');
 const DATA_PATH = '@data/playback-groups.json';
 const SIDEBAR_PATH = 'ui/sidebar.html';
 const LOAD_WATCHDOG_MS = 30000;
+const SIDEBAR_READY_TIMEOUT_MS = 1500;
+const SIDEBAR_LOAD_ATTEMPTS = 3;
 const SIDEBAR_MESSAGES = [
   'createGroup',
   'renameGroup',
@@ -134,6 +136,10 @@ function createController(iina, options) {
   let seekEofSuppression = null;
   let controllerPausePending = false;
   let mpvOptionSnapshot = null;
+  let sidebarBindingGeneration = 0;
+  let sidebarReady = false;
+  let sidebarReadyTimer = null;
+  let sidebarLoadAttempts = 0;
   let coordinatorBootId = typeof settings.coordinatorBootId === 'string'
     ? settings.coordinatorBootId : null;
   let coordinatorRequestId = Number.isInteger(settings.coordinatorRequestId)
@@ -782,14 +788,49 @@ function createController(iina, options) {
     },
   };
 
-  function loadSidebarDocument() {
+  function clearSidebarReadyTimer() {
+    if (sidebarReadyTimer === null) return;
+    timers.clearTimeout(sidebarReadyTimer);
+    sidebarReadyTimer = null;
+  }
+
+  function markSidebarReady(generation) {
+    if (generation !== sidebarBindingGeneration) return false;
+    sidebarReady = true;
+    sidebarLoadAttempts = 0;
+    clearSidebarReadyTimer();
+    return true;
+  }
+
+  function loadSidebarDocument(isRetry) {
+    if (closed || windowInactive) return;
+    if (isRetry !== true) sidebarLoadAttempts = 0;
+    sidebarLoadAttempts += 1;
+    sidebarReady = false;
+    sidebarBindingGeneration += 1;
+    const generation = sidebarBindingGeneration;
+    clearSidebarReadyTimer();
     // loadFile replaces IINA 1.4's sidebar message hub, so the handlers must
     // be rebound after every document load rather than only at plugin start.
-    iina.sidebar.loadFile(SIDEBAR_PATH);
+    try {
+      iina.sidebar.loadFile(SIDEBAR_PATH);
+    } catch (_) {
+      // A reused welcome-page WebView may not be ready yet. The same bounded
+      // readiness watchdog below retries both thrown and silent failures.
+    }
     SIDEBAR_MESSAGES.forEach((name) => iina.sidebar.onMessage(name, (payload) => {
+      if (generation !== sidebarBindingGeneration) return undefined;
+      if (name === 'ready' && !markSidebarReady(generation)) return undefined;
       if (name !== 'ready' && name !== 'selectGroup' && !canWrite()) return undefined;
       return messageHandlers[name](payload);
     }));
+    sidebarReadyTimer = timers.setTimeout(() => {
+      sidebarReadyTimer = null;
+      if (closed || windowInactive || sidebarReady
+        || generation !== sidebarBindingGeneration
+        || sidebarLoadAttempts >= SIDEBAR_LOAD_ATTEMPTS) return;
+      loadSidebarDocument(true);
+    }, SIDEBAR_READY_TIMEOUT_MS);
   }
 
   function activateOwner() {
@@ -824,6 +865,8 @@ function createController(iina, options) {
       if (typeof settings.setActive === 'function') settings.setActive(true);
     }
     activateOwner();
+    if (!sidebarReady && sidebarReadyTimer === null
+      && iina.core.window.loaded === true) loadSidebarDocument();
     return true;
   }
 
@@ -1184,6 +1227,7 @@ function createController(iina, options) {
     failureTimers.forEach((timer) => timers.clearTimeout(timer));
     if (syncRetryTimer !== null) timers.clearTimeout(syncRetryTimer);
     if (loadWatchdogTimer !== null) timers.clearTimeout(loadWatchdogTimer);
+    clearSidebarReadyTimer();
     failureTimers.clear();
     saveTimer = null;
     progressSaveTimer = null;

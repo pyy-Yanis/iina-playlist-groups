@@ -16,17 +16,23 @@ function controllerHarness() {
   const events = Object.create(null);
   const sidebarHandlers = Object.create(null);
   const posted = [];
+  const timeoutCallbacks = new Map();
   let timerId = 0;
+  let sidebarLoads = 0;
   const timers = {
-    setTimeout() { timerId += 1; return timerId; },
-    clearTimeout() {},
+    setTimeout(callback, delay) {
+      timerId += 1;
+      timeoutCallbacks.set(timerId, { callback, delay });
+      return timerId;
+    },
+    clearTimeout(id) { timeoutCallbacks.delete(id); },
     setInterval() { timerId += 1; return timerId; },
     clearInterval() {},
   };
   const window = { loaded: false, fullscreen: false };
   const iina = {
     sidebar: {
-      loadFile() {},
+      loadFile() { sidebarLoads += 1; },
       onMessage(name, handler) {
         if (!sidebarHandlers[name]) sidebarHandlers[name] = [];
         sidebarHandlers[name].push(handler);
@@ -80,7 +86,17 @@ function controllerHarness() {
     const handlers = sidebarHandlers[name] || [];
     handlers[handlers.length - 1](payload);
   }
-  return { iina, timers, window, posted, sidebarHandlers, emit, send };
+  function runTimeouts(delay) {
+    Array.from(timeoutCallbacks.entries()).forEach(([id, timer]) => {
+      if (timer.delay !== delay || !timeoutCallbacks.has(id)) return;
+      timeoutCallbacks.delete(id);
+      timer.callback();
+    });
+  }
+  return {
+    iina, timers, window, posted, sidebarHandlers, emit, send, runTimeouts,
+    sidebarLoads: () => sidebarLoads,
+  };
 }
 
 test('IINA manifest registers the global coordinator with the supported key', () => {
@@ -128,6 +144,12 @@ test('controller defers sidebar loading until IINA reports the player window is 
   const controller = createController(iina, {
     readOnly: true,
     initialState: { schemaVersion: 1, nextGroupId: 1, nextItemId: 1, groups: [] },
+    timers: {
+      setTimeout() { return 1; },
+      clearTimeout() {},
+      setInterval() { return 1; },
+      clearInterval() {},
+    },
   });
 
   controller.start();
@@ -161,6 +183,35 @@ test('welcome-page player recovers all shared write handling after a stale close
 
   const stateMessages = harness.posted.filter((entry) => entry.name === 'stateChanged');
   assert.equal(stateMessages[stateMessages.length - 1].payload.state.groups[0].name, 'Recovered');
+});
+
+test('sidebar bridge reloads after a missing ready handshake and ignores stale handlers', () => {
+  const harness = controllerHarness();
+  const controller = createController(harness.iina, {
+    initialState: { schemaVersion: 1, nextGroupId: 1, nextItemId: 1, groups: [] },
+    timers: harness.timers,
+  });
+
+  controller.start();
+  harness.window.loaded = true;
+  harness.emit('iina.window-loaded');
+  assert.equal(harness.sidebarLoads(), 1);
+
+  harness.runTimeouts(1500);
+  assert.equal(harness.sidebarLoads(), 2);
+  harness.sidebarHandlers.ready[0]({});
+  harness.runTimeouts(1500);
+  assert.equal(harness.sidebarLoads(), 3);
+
+  harness.runTimeouts(1500);
+  assert.equal(harness.sidebarLoads(), 3);
+  harness.emit('iina.file-loaded', 'file:///videos/recovery.mp4');
+  assert.equal(harness.sidebarLoads(), 4);
+
+  const currentReady = harness.sidebarHandlers.ready.at(-1);
+  currentReady({});
+  harness.runTimeouts(1500);
+  assert.equal(harness.sidebarLoads(), 4);
 });
 
 test('manual EOF identifies the completed item from its verified loaded token', () => {
