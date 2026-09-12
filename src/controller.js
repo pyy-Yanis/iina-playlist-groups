@@ -802,8 +802,8 @@ function createController(iina, options) {
     // which certifies ownership of the replacement entry.
     if (!lifecycleRegistered) {
       lifecycleRegistered = true;
-      iina.event.on('iina.file-started', onFileStarted);
-      iina.event.on('iina.file-loaded', onFileLoaded);
+      iina.event.on('iina.file-started', onActiveFileStarted);
+      iina.event.on('iina.file-loaded', onActiveFileLoaded);
       iina.event.on('mpv.eof-reached.changed', onEofReachedChanged);
       iina.event.on('mpv.seeking.changed', onSeekingChanged);
       iina.event.on('mpv.pause.changed', onPauseChanged);
@@ -814,6 +814,27 @@ function createController(iina, options) {
     }
     synchronizePlaylist();
     sampleInterval = timers.setInterval(sampleProgress, 1000);
+  }
+
+  function recoverActiveWindow() {
+    if (closed) return false;
+    if (windowInactive) {
+      windowInactive = false;
+      windowEpoch += 1;
+      if (typeof settings.setActive === 'function') settings.setActive(true);
+    }
+    activateOwner();
+    return true;
+  }
+
+  function onActiveFileStarted() {
+    if (!recoverActiveWindow()) return;
+    onFileStarted();
+  }
+
+  function onActiveFileLoaded(url) {
+    if (!recoverActiveWindow()) return;
+    onFileLoaded(url);
   }
 
   function start() {
@@ -1196,16 +1217,10 @@ function createController(iina, options) {
 
   function onWindowLoaded() {
     if (closed) return;
-    const wasInactive = windowInactive;
-    if (wasInactive) {
-      windowInactive = false;
-      windowEpoch += 1;
-      if (typeof settings.setActive === 'function') settings.setActive(true);
-    }
     // A PlayerCore may start on IINA's initial window, where the first sidebar
     // load is forbidden. Create it only after IINA certifies the player window.
     loadSidebarDocument();
-    activateOwner();
+    recoverActiveWindow();
     postState();
     postPlayback();
   }

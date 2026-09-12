@@ -12,6 +12,77 @@ const {
 } = require('../src/controller.js');
 const { adjacentPlaybackPayload } = require('../ui/sidebar.js');
 
+function controllerHarness() {
+  const events = Object.create(null);
+  const sidebarHandlers = Object.create(null);
+  const posted = [];
+  let timerId = 0;
+  const timers = {
+    setTimeout() { timerId += 1; return timerId; },
+    clearTimeout() {},
+    setInterval() { timerId += 1; return timerId; },
+    clearInterval() {},
+  };
+  const window = { loaded: false, fullscreen: false };
+  const iina = {
+    sidebar: {
+      loadFile() {},
+      onMessage(name, handler) {
+        if (!sidebarHandlers[name]) sidebarHandlers[name] = [];
+        sidebarHandlers[name].push(handler);
+      },
+      postMessage(name, payload) { posted.push({ name, payload }); },
+      show() {},
+    },
+    event: {
+      on(name, handler) {
+        if (!events[name]) events[name] = [];
+        events[name].push(handler);
+      },
+    },
+    menu: {
+      items() { return []; },
+      item(title, action, options) { return { title, action, options }; },
+      addItem() {},
+      removeAt() {},
+    },
+    core: {
+      window,
+      status: { paused: true },
+      pause() {},
+      resume() {},
+      osd() {},
+    },
+    mpv: {
+      getString(name) { return name === 'keep-open' ? 'no' : ''; },
+      getNumber() { return 0; },
+      getFlag() { return false; },
+      getNative() { return []; },
+      set() {},
+      command() {},
+      addHook() {},
+    },
+    playlist: { list() { return []; } },
+    input: {
+      PRIORITY_HIGH: 1,
+      onKeyDown() {},
+    },
+    file: {
+      read() { return null; },
+      write() {},
+      exists() { return true; },
+    },
+  };
+  function emit(name, payload) {
+    (events[name] || []).forEach((handler) => handler(payload));
+  }
+  function send(name, payload) {
+    const handlers = sidebarHandlers[name] || [];
+    handlers[handlers.length - 1](payload);
+  }
+  return { iina, timers, window, posted, sidebarHandlers, emit, send };
+}
+
 test('IINA manifest registers the global coordinator with the supported key', () => {
   const info = JSON.parse(fs.readFileSync(path.join(__dirname, '../Info.json'), 'utf8'));
   assert.equal(info.global, 'global.js');
@@ -67,6 +138,29 @@ test('controller defers sidebar loading until IINA reports the player window is 
 
   assert.equal(loads, 1);
   assert.equal(bindings, 11);
+});
+
+test('welcome-page player recovers all shared write handling after a stale close event', () => {
+  const harness = controllerHarness();
+  const initialState = {
+    schemaVersion: 1,
+    nextGroupId: 2,
+    nextItemId: 1,
+    selectedGroupId: 'group-1',
+    groups: [{ id: 'group-1', name: 'Original', mode: 'loop', resume: false, items: [] }],
+  };
+  const controller = createController(harness.iina, { initialState, timers: harness.timers });
+
+  controller.start();
+  harness.window.loaded = true;
+  harness.emit('iina.window-loaded');
+  harness.emit('iina.window-will-close');
+  harness.emit('iina.file-started');
+  harness.emit('iina.file-loaded', 'file:///videos/one.mp4');
+  harness.send('renameGroup', { groupId: 'group-1', name: 'Recovered' });
+
+  const stateMessages = harness.posted.filter((entry) => entry.name === 'stateChanged');
+  assert.equal(stateMessages[stateMessages.length - 1].payload.state.groups[0].name, 'Recovered');
 });
 
 test('manual EOF identifies the completed item from its verified loaded token', () => {
