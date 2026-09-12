@@ -148,6 +148,24 @@
     };
   }
 
+  function startReadyHandshake(sendReady, timers) {
+    const clock = timers || { setTimeout, clearTimeout };
+    let stopped = false;
+    let timer = null;
+    function attempt() {
+      if (stopped) return;
+      sendReady();
+      if (!stopped) timer = clock.setTimeout(attempt, 250);
+    }
+    attempt();
+    return () => {
+      if (stopped) return;
+      stopped = true;
+      if (timer !== null) clock.clearTimeout(timer);
+      timer = null;
+    };
+  }
+
   function basename(filePath) {
     const parts = String(filePath || '').split(/[\\/]/);
     return parts[parts.length - 1] || '未命名项目';
@@ -257,8 +275,12 @@
     let toastTimer = null;
     let readOnly = false;
 
+    let receivedInitialState = false;
+    let stopReadyHandshake = () => {};
     const bridge = createBridge(iina, {
       stateChanged(payload) {
+        receivedInitialState = true;
+        stopReadyHandshake();
         const nextState = payload && payload.state ? payload.state : payload;
         appState = nextState && Array.isArray(nextState.groups) ? nextState : { groups: [] };
         const requestedId = payload && (payload.selectedGroupId || payload.currentGroupId);
@@ -784,7 +806,8 @@
       render();
       // IINA 1.4's WebKit bridge serializes the second array element. An
       // omitted payload becomes `undefined`, which WKScriptMessage rejects.
-      send('ready', {});
+      stopReadyHandshake = startReadyHandshake(() => send('ready', {}));
+      if (receivedInitialState) stopReadyHandshake();
     }
 
     return { bridge, render };
@@ -804,6 +827,7 @@
     closeMenuForRender,
     itemAriaLabel,
     itemMetaText,
+    startReadyHandshake,
     patchDurationText,
     patchPlaybackRow,
     makeTransferPayload,
