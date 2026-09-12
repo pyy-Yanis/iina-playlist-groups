@@ -23,7 +23,7 @@
 ## 安装
 
 1. 打开项目的 [Releases](../../releases/latest) 页面。
-2. 下载 `IINA-Playback-Groups-0.1.12.iinaplgz`。
+2. 下载 `IINA-Playback-Groups-0.1.13.iinaplgz`。
 3. 双击安装包，或在 IINA 的插件设置中选择安装本地插件。
 4. 如插件没有立即出现，请完全退出并重新打开 IINA。
 
@@ -77,7 +77,7 @@ for file in global.js main.js src/*.js ui/sidebar.js; do node --check "$file" ||
 打包插件：
 
 ```bash
-zip -X -q -r IINA-Playback-Groups-0.1.12.iinaplgz Info.json global.js main.js src ui
+zip -X -q -r IINA-Playback-Groups-0.1.13.iinaplgz Info.json global.js main.js src ui
 ```
 
 ## 说明
